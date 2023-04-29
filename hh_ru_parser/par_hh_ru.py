@@ -25,25 +25,31 @@ def get_status_code(vacancy):
 def get_vacansy(content):
     soup = bs(content.content, 'html.parser')
     block = soup.find_all('div', {'class': 'vacancy-serp-item-body__main-info'})
-    dct_block = {}
     vacancies = []
-    for i in range(len(block)):
-        if block[i].findChildren('span', {'class': 'bloko-header-section-3'}):
-            salary = re.findall('\d{1,6}',
-                                block[i].findChildren('span', {'class': 'bloko-header-section-3'})
-                                [0].text.replace('\u202f', ''))
-            currency = re.findall('[а-я]{3}|[A-Z]{3}',
-                                  block[i].findChildren('span', {'class': 'bloko-header-section-3'})
-                                  [0].text.replace('\u202f', ''))
+    #salary_min, salary_max = None, None
+    for i in block:
+        if i.findChildren('span', {'class': 'bloko-header-section-3'}):
+            sal_raw = i.findChildren('span', {'class': 'bloko-header-section-3'})[0].text.replace('\u202f', '')
+            salary = re.findall('\d{1,6}', sal_raw)
+            if 'до' in sal_raw and 'от' not in sal_raw:
+                salary_min, salary_max = None, salary[0]
+            elif 'от' in sal_raw and 'до' not in sal_raw:
+                salary_min, salary_max = salary[0], None
+            elif 'от' in sal_raw and 'до' in sal_raw:
+                salary_min, salary_max = salary[0], salary[1]
+            elif len(salary) > 1:
+                salary_min, salary_max = salary[0], salary[1]
+            currency = re.findall('[а-я]{3}|[A-Z]{3}', sal_raw)[0]
         else:
-            salary = None
+            salary_min, salary_max = None, None
             currency = None
-        vacancy_text = block[i].findChildren('a', {'class': 'serp-item__title'})[0].text
-        vacancy_href = block[i].findChildren('a', {'class': 'serp-item__title'})[0].get('href')
+
+        vacancy_text = i.findChildren('a', {'class': 'serp-item__title'})[0].text
+        vacancy_href = i.findChildren('a', {'class': 'serp-item__title'})[0].get('href')
         dct_block = {'name': vacancy_text,
-                     'salary_min': salary[0] if salary else None,
-                     'salary_max': salary[1] if salary and len(salary) > 1 else None,
-                     'currency': currency[0] if currency else None,
+                     'salary_min': int(salary_min) if salary_min is not None else salary_min,
+                     'salary_max': int(salary_max) if salary_max is not None else salary_max,
+                     'currency': currency,
                      'link': vacancy_href}
 
         vacancies.append(dct_block)
@@ -138,6 +144,6 @@ vacancy = 'python'
 url = f'https://kazan.hh.ru/search/vacancy?no_magic=true&L_save_area=true&text={vacancy}&excluded_text=&area=88&salary=&' \
       f'currency_code=RUR&experience=doesNotMatter&order_by=relevance&search_period=0&items_on_page=20'
 
-pprint(get_count_pages())
+pprint(get_all_vacancies('python', 1)['vacancies'])
 
 
