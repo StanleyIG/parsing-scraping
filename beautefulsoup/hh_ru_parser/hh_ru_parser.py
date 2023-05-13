@@ -27,7 +27,7 @@ class HHruParser:
 
     """получает список вакансий на страницу"""
 
-    def get_vacansy(content):
+    def get_vacansy(self, content):
         soup = bs(content.content, 'html.parser')
         block = soup.find_all('div', {'class': 'vacancy-serp-item-body__main-info'})
         vacancies = []
@@ -90,7 +90,7 @@ class HHruParser:
 
     """записывает вакансии в json"""
     def write_json(self):
-        FILENAME = 'hhru.json'
+        FILENAME = 'beautefulsoup/hhru.json'
         with open(FILENAME, 'w', encoding='utf-8') as file:
             json.dump(self.get_all_vacancies(), file, ensure_ascii=False, indent=4)
 
@@ -108,12 +108,15 @@ class HHruParser:
 
 
 parser = HHruParser('python', 5)
-vacancies = parser.get_all_vacancies()['vacancies']
-mongodb = parser.add_to_mongodb()
+#vacancies = parser.get_all_vacancies()['vacancies']
+#mongodb = parser.add_to_mongodb()
 
 """посмотреть все вакансии"""
-for vacansy in mongodb.find():
-    print(vacansy)
+#for vacansy in mongodb.find():
+#    print(vacansy)
 
 """посмотреть конкретную"""
 # print(mongodb.find_one({'link': vacancies[5]['link']}))
+
+"""записать в json"""
+parser.write_json()
